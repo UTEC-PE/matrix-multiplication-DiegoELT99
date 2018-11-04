@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
+#include <time.h>
 #include <cmath>
 
 #define DIMENSION 2
@@ -16,17 +17,18 @@ int matrixM[DIMENSION][DIMENSION];
 
 DWORD matrixMultiplication(LPVOID threadIndex)
 {
-    int i = (int)threadIndex;
+    int * i = (int *)threadIndex;
+    
     for(int j = 0; j < DIMENSION; j++)
     {
         int result = 0;
 
         for(int k = 0; k < DIMENSION; k++)
         {
-            result += matrixA[i][k] * matrixB[k][j];
+            result += matrixA[*i][k] * matrixB[k][j];
         }
-        matrixM[i][j] += result;
-    } 
+        matrixM[*i][j] += result;
+    }
 }
 
 void printMatrix(int matrix[DIMENSION][DIMENSION])
@@ -47,10 +49,13 @@ int main()
     cout << "Matrix Multiplication w/Threads ٩(◕‿◕｡)۶" << endl;
     cout << "---------------------------------------------------" << endl;
 
+    srand (time(NULL));
+
     for (int i = 0; i < DIMENSION; i++) { 
         for (int j = 0; j < DIMENSION; j++) { 
             matrixA[i][j] = rand() % 10; 
             matrixB[i][j] = rand() % 10; 
+            matrixM[i][j] = 0;
         } 
     } 
 
@@ -59,24 +64,23 @@ int main()
 
     int data[DIMENSION];
 
-    for (int threadID = 0; threadID < DIMENSION; ++threadID) 
+    for (int threadID = 0; threadID < DIMENSION; threadID++) 
     {
-        data[threadID] = threadID;
-        threadHandle[threadID] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&matrixMultiplication, &data[threadID], 0, &threads[threadID]);
+        data[counter] = threadID;
+        threadHandle[threadID] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&matrixMultiplication, &data[counter], 0, &threads[counter]);
+        counter++;
     }
 
-    for (long threadID = 0; threadID < DIMENSION; ++threadID)
-     {
-        WaitForMultipleObjects(DIMENSION, threadHandle, TRUE, INFINITE);
-    }
     
-    /*printMatrix(matrixA);
-    cout << endl;
+    WaitForMultipleObjects(DIMENSION, threadHandle, TRUE, INFINITE);
+    
+    printMatrix(matrixA);
+    cout << '*' << endl;
 
     printMatrix(matrixB);
-    cout << endl;
+    cout << '=' << endl;
 
     printMatrix(matrixM);
-    cout << endl;*/
+    cout << endl;
 
 }
